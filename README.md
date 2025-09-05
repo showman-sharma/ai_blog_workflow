@@ -44,6 +44,9 @@ Automate the creation and publishing of a weekly AI/ML newsletter using real new
 ## Requirements
 See `requirements.txt` for Python dependencies. Make sure to install all listed packages for full functionality.
 
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
 ## LinkedIn Nodes: Generating LinkedIn-Native Content
 
 You can use the optional `linkedin_nodes.py` to generate LinkedIn-native articles and carousel scripts from your weekly news and research sources. This is useful for manual posting or cross-posting to LinkedIn, and is not included in WordPress posts.

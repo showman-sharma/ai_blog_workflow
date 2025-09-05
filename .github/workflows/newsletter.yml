@@ -25,6 +25,8 @@ jobs:
           echo "COHERE_API_KEY=${{ secrets.COHERE_API_KEY }}" >> .env
           echo "WORDPRESS_ACCESS_TOKEN=${{ secrets.WORDPRESS_ACCESS_TOKEN }}" >> .env
           echo "WORDPRESS_SITE_ID=${{ secrets.WORDPRESS_SITE_ID }}" >> .env
+          echo "SERPSTACK_API_KEY=${{ secrets.SERPSTACK_API_KEY }}" >> .env
+          echo "PUBLISH=True" >> .env
           # Add other required env vars here
 
       - name: Run newsletter generator

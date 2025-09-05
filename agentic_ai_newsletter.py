@@ -172,6 +172,14 @@ def deeper_research(topic):
 if __name__ == "__main__":
     print("=== Agentic AI/ML Newsletter Generator ===\n")
     print(f"MODE: {AGENT_MODE}\n")
+
+    # Ensure WordPress OAuth2 is complete before any LLM inferencing
+    if not WORDPRESS_ACCESS_TOKEN:
+        print("\nTo authorize your app, visit this URL and follow the instructions:")
+        print(get_wordpress_authorization_url())
+        print("After authorization, use the code to get your access token and add it to your .env file.")
+        exit(0)
+
     print("Fetching latest AI/ML headlines...")
     arxiv_headlines = fetch_arxiv_ai_papers(max_results=5)
     news_headlines = serpstack_news_search("artificial intelligence machine learning", num=5)
@@ -188,7 +196,3 @@ if __name__ == "__main__":
             # Auto-publish to WordPress
             publish_to_wordpress(f"AI/ML Weekly: {topic}", article)
     print("\nNewsletter draft complete!")
-    # If you need to start OAuth2 flow, print the authorization URL
-    if not WORDPRESS_ACCESS_TOKEN:
-        print("\nTo authorize your app, visit this URL and follow the instructions:")
-        print(get_wordpress_authorization_url())

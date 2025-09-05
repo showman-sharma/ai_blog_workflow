@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.manifest
+*.spec
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# Environment and secrets
+.env
+.env.*
+*.env
+
+# Virtual environment
+venv/
+ENV/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Agentic newsletter output
+newsletter_drafts/
+
+# Misc
+*.bak
+*.swp
+*.tmp
+
+# Ignore API keys and credentials
+*.key
+*.pem
+*.crt
+*.p12
+*.db
+
+# Ignore test output
+*.out
+*.test
+
+# Ignore cache
+.cache/
+
+# Ignore pip wheel files
+*.whl

@@ -4,38 +4,15 @@ import requests
 import xml.etree.ElementTree as ET
 import os
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
-from urllib.parse import urlencode
-WORDPRESS_CLIENT_ID = os.getenv("WORDPRESS_CLIENT_ID")
-WORDPRESS_CLIENT_SECRET = os.getenv("WORDPRESS_CLIENT_SECRET")
-WORDPRESS_REDIRECT_URI = os.getenv("WORDPRESS_REDIRECT_URI", "https://showmansharma.wordpress.com/")
+from datetime import datetime, timedelta, timezone
+
+
 WORDPRESS_ACCESS_TOKEN = os.getenv("WORDPRESS_ACCESS_TOKEN")
 WORDPRESS_SITE_ID = os.getenv("WORDPRESS_SITE_ID")  # e.g., '123456789' or 'showmansharma.wordpress.com'
 
-def get_wordpress_authorization_url():
-    params = {
-        "client_id": WORDPRESS_CLIENT_ID,
-        "redirect_uri": WORDPRESS_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "global"
-    }
-    return f"https://public-api.wordpress.com/oauth2/authorize?{urlencode(params)}"
-
-def get_wordpress_access_token(auth_code):
-    url = "https://public-api.wordpress.com/oauth2/token"
-    data = {
-        "client_id": WORDPRESS_CLIENT_ID,
-        "client_secret": WORDPRESS_CLIENT_SECRET,
-        "redirect_uri": WORDPRESS_REDIRECT_URI,
-        "grant_type": "authorization_code",
-        "code": auth_code
-    }
-    response = requests.post(url, data=data)
-    return response.json().get("access_token")
-
 def publish_to_wordpress(title, content):
     if not WORDPRESS_ACCESS_TOKEN:
-        print("WordPress access token not set. Please complete OAuth2 flow.")
+        print("WordPress access token not set. Please add it to your .env file.")
         return
     url = f"https://public-api.wordpress.com/rest/v1.1/sites/{WORDPRESS_SITE_ID}/posts/new"
     headers = {"Authorization": f"Bearer {WORDPRESS_ACCESS_TOKEN}"}
@@ -50,7 +27,15 @@ def publish_to_wordpress(title, content):
     else:
         print(f"Failed to publish post: {response.text}")
 
+
+
 load_dotenv()
+# Now load all environment variables after dotenv
+WORDPRESS_CLIENT_ID = os.getenv("WORDPRESS_CLIENT_ID")
+WORDPRESS_CLIENT_SECRET = os.getenv("WORDPRESS_CLIENT_SECRET")
+WORDPRESS_REDIRECT_URI = os.getenv("WORDPRESS_REDIRECT_URI", "https://showmansharma.wordpress.com/")
+WORDPRESS_ACCESS_TOKEN = os.getenv("WORDPRESS_ACCESS_TOKEN")
+WORDPRESS_SITE_ID = os.getenv("WORDPRESS_SITE_ID")  # e.g., '123456789' or 'showmansharma.wordpress.com'
 
 # MODE: 'local' for Ollama/Phi-3, 'cohere' for Cohere API
 AGENT_MODE = os.getenv("AGENT_MODE", "local")
@@ -68,11 +53,9 @@ ARXIV_URL = "http://export.arxiv.org/api/query"
 SERPSTACK_API_KEY = os.getenv("SERPSTACK_API_KEY")
 SERPSTACK_URL = "http://api.serpstack.com/search"
 
-# Helper: Fetch latest AI/ML papers from ArXiv
-
 def fetch_arxiv_ai_papers(max_results=10):
     # Get date 7 days ago
-    one_week_ago = datetime.utcnow() - timedelta(days=7)
+    one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
     params = {
         "search_query": "cat:cs.AI+OR+cat:cs.LG",
         "start": 0,
@@ -108,7 +91,7 @@ def serpstack_news_search(query, num=10):
     response = requests.get(SERPSTACK_URL, params=params)
     data = response.json()
     results = []
-    one_week_ago = datetime.utcnow() - timedelta(days=7)
+    one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
     if "news_results" in data:
         for item in data["news_results"]:
             title = item.get("title", "")
@@ -170,14 +153,12 @@ def deeper_research(topic):
         return response.json()["response"]
 
 if __name__ == "__main__":
+
     print("=== Agentic AI/ML Newsletter Generator ===\n")
     print(f"MODE: {AGENT_MODE}\n")
 
-    # Ensure WordPress OAuth2 is complete before any LLM inferencing
     if not WORDPRESS_ACCESS_TOKEN:
-        print("\nTo authorize your app, visit this URL and follow the instructions:")
-        print(get_wordpress_authorization_url())
-        print("After authorization, use the code to get your access token and add it to your .env file.")
+        print("WordPress access token not set. Please add it to your .env file.")
         exit(0)
 
     print("Fetching latest AI/ML headlines...")
@@ -187,12 +168,49 @@ if __name__ == "__main__":
     print("\nAnalyzing headlines and ideating topics...")
     topics_summary = summarize_and_ideate(all_headlines)
     print("\nSuggested topics and research needs:\n", topics_summary)
-    # Extract topics needing deeper research (simple heuristic: look for lines with 'deeper research needed')
+
+    # Extract topics (lines that look like topic suggestions)
+    topics = []
     for line in topics_summary.split('\n'):
-        if 'deeper research' in line.lower():
-            topic = line.split(':')[0].strip()
-            article = deeper_research(topic)
-            print(f"\nDrafted article for topic '{topic}':\n{article}\n")
-            # Auto-publish to WordPress
-            publish_to_wordpress(f"AI/ML Weekly: {topic}", article)
+        if line.strip() and (line.startswith("-") or line.startswith("1.") or line.startswith("2.") or line.startswith("3.")):
+            # Remove leading number/bullet
+            topic = line.lstrip("-1234567890. ").strip('"')
+            if topic:
+                topics.append(topic)
+
+    # For each topic, draft and publish a full article
+    for topic in topics:
+        print(f"\nDrafting article for topic: {topic}\n")
+        # Gather relevant findings
+        arxiv_results = fetch_arxiv_ai_papers(max_results=3)
+        news_results = serpstack_news_search(topic, num=3)
+        # Improved prompt for LLM
+        prompt = (
+            f"Write a well-structured, engaging newsletter article on the topic '{topic}'. "
+            f"Use the following recent news and research findings. "
+            f"Include an introduction, key points from the findings, analysis, and a conclusion. "
+            f"Format the article with headings, bullet points, and bold important terms.\n\n"
+            f"## News Headlines\n{news_results}\n\n## Research Papers\n{arxiv_results}\n"
+        )
+        if AGENT_MODE == "cohere":
+            if not COHERE_API_KEY:
+                raise ValueError("COHERE_API_KEY environment variable not set.")
+            url = "https://api.cohere.ai/v1/chat"
+            headers = {"Authorization": f"Bearer {COHERE_API_KEY}", "Content-Type": "application/json"}
+            payload = {
+                "model": COHERE_MODEL,
+                "message": prompt,
+                "temperature": 0.4,
+                "max_tokens": 2048
+            }
+            response = requests.post(url, headers=headers, json=payload)
+            article = response.json()["text"]
+        else:
+            response = requests.post(OLLAMA_URL, json={"model": MODEL, "prompt": prompt, "stream": False})
+            article = response.json()["response"]
+
+        print(f"\nDrafted article for topic '{topic}':\n{article}\n")
+        # Auto-publish to WordPress
+        publish_to_wordpress(f"AI/ML Weekly: {topic}", article)
+
     print("\nNewsletter draft complete!")

@@ -44,8 +44,22 @@ Automate the creation and publishing of a weekly AI/ML newsletter using real new
 ## Requirements
 See `requirements.txt` for Python dependencies. Make sure to install all listed packages for full functionality.
 
-## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+
+## Automation: Cloud-Based Generation & Publishing
+
+This project is fully automated using GitHub Actions:
+- The newsletter workflow runs in the cloud, either on a schedule (e.g., weekly) or with a single click.
+- All API keys and credentials are securely managed as GitHub secrets—no manual entry required.
+- The workflow fetches news and research, generates content with LLMs, assembles the newsletter, and publishes directly to WordPress—end-to-end, hands-off.
+- You can monitor, trigger, and review runs in the GitHub Actions tab.
+
+**How it works:**
+1. The workflow YAML (`.github/workflows/newsletter.yml`) defines the automation schedule and environment.
+2. Secrets are passed as environment variables to the script for secure access.
+3. The script runs in the cloud, generates the newsletter, and publishes it automatically.
+
+This means you never have to manually run the codebase—just set up once and let the automation handle everything!
 
 ## LinkedIn Nodes: Generating LinkedIn-Native Content
 
@@ -86,4 +100,4 @@ You can use the optional `linkedin_nodes.py` to generate LinkedIn-native article
 **Note:** The nodes expect your news and papers in a specific format (see `model_dump()` usage in the code). You may need to adapt your data structures to match what the nodes expect.
 
 ## License
-MIT
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

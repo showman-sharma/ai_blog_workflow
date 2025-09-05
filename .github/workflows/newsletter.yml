@@ -1,0 +1,31 @@
+name: Weekly AI/ML Newsletter
+
+on:
+  schedule:
+    - cron: '0 8 * * 5'  # Runs every Friday at 8:00 UTC
+  workflow_dispatch:      # Allows manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set up environment variables
+        run: |
+          echo "COHERE_API_KEY=${{ secrets.COHERE_API_KEY }}" >> .env
+          echo "WORDPRESS_ACCESS_TOKEN=${{ secrets.WORDPRESS_ACCESS_TOKEN }}" >> .env
+          echo "WORDPRESS_SITE_ID=${{ secrets.WORDPRESS_SITE_ID }}" >> .env
+          # Add other required env vars here
+
+      - name: Run newsletter generator
+        run: python agentic_newsletter_generator.py

@@ -20,8 +20,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Set up environment variables
-    # Removed: secrets are now passed as environment variables directly to the script
+  # Removed: Set up environment variables step (no longer needed)
 
       - name: Run newsletter generator
         env:
